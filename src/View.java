@@ -1,16 +1,22 @@
 import javax.swing.*;
-import java.awt.*;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class View {
     private JPanel mainPanel;
-    private JCheckBox checkBox1;
     private JButton startLoggingButton;
     private JButton stopLoggingButton;
     private JButton triggerAlertsButton;
     private JTextArea textArea1;
+    private JComboBox logsCombo;
+    private JComboBox alertsCombo;
     private JPanel logsPanel;
     private JPanel alertsPanel;
     ArrayList<LogExe> threads = new ArrayList<LogExe>();
@@ -19,26 +25,18 @@ public class View {
         startLoggingButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                for (Component c : logsPanel.getComponents()) {
-                    if (((JCheckBox)c).isSelected()) {
-                        LogExe p = new LogExe(((JCheckBox)c).getText());
-                        p.start();
-                        threads.add(p);
-                        textArea1.append("[Running] "+((JCheckBox)c).getText()+" Logs\n");
-                    }
-                }
+                LogExe p = new LogExe((String)logsCombo.getSelectedItem());
+                p.start();
+                threads.add(p);
+                textArea1.append("[Running] "+(logsCombo.getSelectedItem() +" Logs\n"));
             }
         });
 
         triggerAlertsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                for (Component c : alertsPanel.getComponents()) {
-                    if (((JCheckBox)c).isSelected()) {
-                        LogExe p = new LogExe(((JCheckBox)c).getText());
-                        p.start();
-                    }
-                }
+                LogExe p = new LogExe((String)alertsCombo.getSelectedItem());
+                p.start();
             }
         });
 
@@ -51,6 +49,33 @@ public class View {
                 textArea1.setText("");
             }
         });
+
+
+        logsCombo.addPopupMenuListener(new PopupMenuListener() {
+            @Override
+            public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+                update();
+            }
+
+            @Override
+            public void popupMenuWillBecomeInvisible(PopupMenuEvent e) { }
+
+            @Override
+            public void popupMenuCanceled(PopupMenuEvent e) {}
+        });
+
+        alertsCombo.addPopupMenuListener(new PopupMenuListener() {
+            @Override
+            public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+                update();
+            }
+
+            @Override
+            public void popupMenuWillBecomeInvisible(PopupMenuEvent e) { }
+
+            @Override
+            public void popupMenuCanceled(PopupMenuEvent e) {}
+        });
     }
 
     public static void main(String[] args) {
@@ -59,10 +84,20 @@ public class View {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.pack();
         frame.setVisible(true);
-        frame.setMinimumSize(new Dimension(470,385));
+        frame.setMinimumSize(new Dimension(470,250));
         frame.setMaximumSize(new Dimension(500,400));
+
+
     }
 
+    public void update(){
+        try {
+            Utils.updateComboBox(logsCombo, "./logs/");
+            Utils.updateComboBox(alertsCombo, "./alerts/");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
 }
 
