@@ -25,7 +25,7 @@ public class View {
         startLoggingButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                LogExe p = new LogExe((String)logsCombo.getSelectedItem());
+                LogExe p = new LogExe("./logs/"+(String)logsCombo.getSelectedItem());
                 p.start();
                 threads.add(p);
                 textArea1.append("[Running] "+(logsCombo.getSelectedItem() +" Logs\n"));
@@ -35,7 +35,7 @@ public class View {
         triggerAlertsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                LogExe p = new LogExe((String)alertsCombo.getSelectedItem());
+                LogExe p = new LogExe("./alerts/"+(String)alertsCombo.getSelectedItem());
                 p.start();
             }
         });
