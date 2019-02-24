@@ -17,6 +17,8 @@ public class View {
     private JTextArea textArea1;
     private JComboBox logsCombo;
     private JComboBox alertsCombo;
+    private JTextField logArguments;
+    private JTextField alertArguments;
     private JPanel logsPanel;
     private JPanel alertsPanel;
     ArrayList<LogExe> threads = new ArrayList<LogExe>();
@@ -25,17 +27,17 @@ public class View {
         startLoggingButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                LogExe p = new LogExe("./logs/"+(String)logsCombo.getSelectedItem());
+                LogExe p = new LogExe("./logs/"+(String)logsCombo.getSelectedItem()+" "+logArguments.getText());
                 p.start();
                 threads.add(p);
-                textArea1.append("[Running] "+(logsCombo.getSelectedItem() +" Logs\n"));
+                textArea1.append("[Running] "+(logsCombo.getSelectedItem() +" Logs as "+logArguments.getText()+"\n"));
             }
         });
 
         triggerAlertsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                LogExe p = new LogExe("./alerts/"+(String)alertsCombo.getSelectedItem());
+                LogExe p = new LogExe("./alerts/"+(String)alertsCombo.getSelectedItem()+" "+alertArguments.getText());
                 p.start();
             }
         });
