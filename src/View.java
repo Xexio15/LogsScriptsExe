@@ -19,6 +19,7 @@ public class View {
     private JComboBox alertsCombo;
     private JTextField logArguments;
     private JTextField alertArguments;
+    private JButton demoButton;
     private JPanel logsPanel;
     private JPanel alertsPanel;
     ArrayList<LogExe> threads = new ArrayList<LogExe>();
@@ -49,6 +50,14 @@ public class View {
                     l.kill();
                 }
                 textArea1.setText("");
+            }
+        });
+
+        demoButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                DemoNetwork demo = new DemoNetwork();
+                demo.launchNetwork(threads,textArea1);
             }
         });
 

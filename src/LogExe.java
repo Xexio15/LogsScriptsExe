@@ -1,3 +1,5 @@
+import com.sun.xml.internal.ws.api.message.ExceptionHasMessage;
+
 import java.io.IOException;
 
 public class LogExe extends Thread {
@@ -7,7 +9,7 @@ public class LogExe extends Thread {
     public  LogExe( String fileName){
         this.fileName = fileName;
     }
-    public void run(){
+    public void run() {
         Runtime rt = Runtime.getRuntime();
         try {
             pr = rt.exec("python " + fileName);
