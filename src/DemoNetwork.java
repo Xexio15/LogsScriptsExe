@@ -50,7 +50,12 @@ public class DemoNetwork {
     }
 
     private void launchWindowsFirewall(ArrayList<LogExe> threads, JTextArea textArea1){
-
+        for (String ip : windows_IPS){
+            LogExe p = new LogExe("./logs/windows_firewall.py "+ip);
+            p.start();
+            threads.add(p);
+            textArea1.append("[Running] windows_firewall.py Logs as "+ip+"\n");
+        }
     }
 
     private void launchSQL(ArrayList<LogExe> threads, JTextArea textArea1){
