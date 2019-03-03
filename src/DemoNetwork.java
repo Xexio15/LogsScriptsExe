@@ -14,6 +14,7 @@ public class DemoNetwork {
 
     public void launchNetwork(ArrayList<LogExe> threads, JTextArea textArea1){
         launchASAFirewall(threads,textArea1);
+        launchSQL(threads, textArea1);
         launchUFW(threads,textArea1);
         launchSSH(threads,textArea1);
 
@@ -53,7 +54,10 @@ public class DemoNetwork {
     }
 
     private void launchSQL(ArrayList<LogExe> threads, JTextArea textArea1){
-
+        LogExe p = new LogExe("./logs/postgresql.py");
+        p.start();
+        threads.add(p);
+        textArea1.append("[Running] postgresql.py Logs\n");
     }
 
 
