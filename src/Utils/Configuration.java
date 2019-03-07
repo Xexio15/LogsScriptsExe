@@ -1,3 +1,5 @@
+package Utils;
+
 public class Configuration {
     private static final Configuration INSTANCE = new Configuration();
     private String logsPath;

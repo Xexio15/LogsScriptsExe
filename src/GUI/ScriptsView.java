@@ -1,12 +1,13 @@
+package GUI;
+import Utils.*;
 import javax.swing.*;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
-import java.awt.Dimension;
 import java.awt.event.*;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class View {
+public class ScriptsView implements Tab{
     private JPanel mainPanel, logsPanel, alertsPanel;
     private JButton startLoggingButton, stopLoggingButton, demoButton, triggerAlertsButton;
     private JTextArea textArea1;
@@ -15,8 +16,10 @@ public class View {
     private JFrame frame;
     private ArrayList<LogExe> threads = new ArrayList<LogExe>();
     private Configuration conf = Configuration.getInstance();
+    public String name = "Scripts";
 
-    public View() {
+    public ScriptsView() {
+
         startLoggingButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -81,33 +84,24 @@ public class View {
         });
 
 
-        frame.addWindowListener(new WindowAdapter(){
-            public void windowClosing(WindowEvent e){
-                int i=JOptionPane.showConfirmDialog(null, "Are you sure?");
-                if(i == 0) {
-                    for (LogExe l : threads) {
-                        l.kill();
-                    }
-                    textArea1.setText("");
-                }
-            }
-        });
+
 
 
     }
 
+    public JPanel getPanel(){
+        return mainPanel;
+    }
 
+    public String getName(){
+        return name;
+    }
 
-    public void start(){
-        Utils.loadConfFile();
-        frame = new JFrame("Logs");
-        frame.setContentPane(new View().mainPanel);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.pack();
-        frame.setVisible(true);
-        frame.setMinimumSize(new Dimension(470,250));
-        frame.setMaximumSize(new Dimension(500,400));
-
+    public void close(){
+        for (LogExe l : threads) {
+            l.kill();
+        }
+        textArea1.setText("");
     }
 
     public void update(){

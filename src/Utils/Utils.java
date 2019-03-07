@@ -1,3 +1,5 @@
+package Utils;
+
 import javax.swing.*;
 import java.io.IOException;
 import java.nio.file.*;
@@ -23,7 +25,7 @@ public final class Utils {
     }
 
     /**
-     * Loads SIEM.conf file and saves the current configuration as a Configuration object
+     * Loads SIEM.conf file and saves the current configuration as a Utils.Configuration object
      */
     public static void loadConfFile(){
         Configuration conf = Configuration.getInstance();
