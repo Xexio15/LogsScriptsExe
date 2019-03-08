@@ -58,6 +58,9 @@ public final class Utils {
                             conf.setLogScriptsPath(System.getProperty("user.dir").replaceAll("\\\\","/")+"/logs/");
                         }
                         else{
+                            if (!value.endsWith("/") || !value.endsWith("\\")){
+                                value = value + "/";
+                            }
                             conf.setLogScriptsPath(value);
                         }
                     }else if(attribute.equals("alertScriptsPath")){
@@ -65,6 +68,9 @@ public final class Utils {
                             conf.setAlertScriptsPath(System.getProperty("user.dir").replaceAll("\\\\","/")+"/alerts/");
 
                         }else{
+                            if (!value.endsWith("/") || !value.endsWith("\\")){
+                                value = value + "/";
+                            }
                             conf.setAlertScriptsPath(value);
                         }
                     }
