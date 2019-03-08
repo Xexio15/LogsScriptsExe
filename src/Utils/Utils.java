@@ -51,7 +51,11 @@ public final class Utils {
 
                     //Where logs will be written (URI)
                     if (attribute.equals("logsPath")){
-                        conf.setLogsPath(Paths.get(value).toString());
+                        if(value.equals(".")){
+                            conf.setLogsPath(System.getProperty("user.dir").replaceAll("\\\\","/")+"/generated_logs/");
+                        }else {
+                            conf.setLogsPath(Paths.get(value).toString());
+                        }
                     }
 
                     else if(attribute.equals("print")){
@@ -62,7 +66,6 @@ public final class Utils {
                     else if(attribute.equals("logScriptsPath")){
                         //If value = . then default URI
                         if(value.equals(".")){
-                            String test = System.getProperty("user.dir");
                             conf.setLogScriptsPath(System.getProperty("user.dir").replaceAll("\\\\","/")+"/logs/");
                         }
 
