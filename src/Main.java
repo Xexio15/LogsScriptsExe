@@ -8,7 +8,7 @@ import java.awt.event.WindowEvent;
 public class Main extends JPanel  {
     private JFrame frame = new JFrame();
     private JTabbedPane tabbedPane = new JTabbedPane();
-    private Tab[] tabs = {new ScriptsView()};
+    private Tab[] tabs = {new ScriptsView(), new DashboardView()};
     private Configuration conf = Configuration.getInstance();
 
     public Main() {
@@ -18,8 +18,7 @@ public class Main extends JPanel  {
         }
         frame.getContentPane().add(tabbedPane);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(640, 480);
-        frame.pack();
+        frame.setSize(1280, 720);
         frame.setLocationByPlatform(true);
         frame.setVisible(true);
         try {

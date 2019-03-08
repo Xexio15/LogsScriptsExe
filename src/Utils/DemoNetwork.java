@@ -22,6 +22,7 @@ public class DemoNetwork {
         launchRouter(threads, textArea1);
         launchASAFirewall(threads,textArea1);
         launchSQL(threads, textArea1);
+        launchWebServer(threads, textArea1);
         launchUFW(threads,textArea1);
         launchWindowsFirewall(threads,textArea1);
         launchSSH(threads,textArea1);
@@ -76,6 +77,11 @@ public class DemoNetwork {
         textArea1.append("[Running] postgresql.py Logs\n");
     }
 
-
+    private void launchWebServer(ArrayList<LogExe> threads, JTextArea textArea1){
+        LogExe p = new LogExe(conf.getLogScriptsPath()+"nginx.py "+conf.getLogScriptsPath(), conf.getLogsPath());
+        p.start();
+        threads.add(p);
+        textArea1.append("[Running] nginx.py Logs\n");
+    }
 }
 

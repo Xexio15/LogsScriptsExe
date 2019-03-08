@@ -17,7 +17,7 @@ public class LogExe extends Thread {
     public void run() {
         Runtime rt = Runtime.getRuntime();
         try {
-            pr = rt.exec("python "+fileName, null, new File(Paths.get(logDir).toString()));
+            pr = rt.exec("python "+fileName, null, new File(logDir));
         } catch (IOException e) {
             e.printStackTrace();
         }

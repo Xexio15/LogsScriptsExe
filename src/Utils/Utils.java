@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.List;
+import java.util.Properties;
 
 public final class Utils {
     /**
@@ -39,6 +40,7 @@ public final class Utils {
                 else{
 
                     line = line.replaceAll("\\\\","/");
+                    System.out.println(line);
                     String[] sep = line.split(":",2);
                     String attribute = sep[0];
                     attribute = attribute.replaceAll(" ","");
@@ -47,31 +49,43 @@ public final class Utils {
                     }
                     String value = Paths.get(sep[1]).toString();
 
+                    //Where logs will be written (URI)
                     if (attribute.equals("logsPath")){
-                        conf.setLogsPath(value);
+                        conf.setLogsPath(Paths.get(value).toString());
                     }
+
                     else if(attribute.equals("print")){
                         //
-                    }else if(attribute.equals("logScriptsPath")){
+                    }
+
+                    //WHERE logs scripts are located (URI)
+                    else if(attribute.equals("logScriptsPath")){
+                        //If value = . then default URI
                         if(value.equals(".")){
                             String test = System.getProperty("user.dir");
                             conf.setLogScriptsPath(System.getProperty("user.dir").replaceAll("\\\\","/")+"/logs/");
                         }
+
                         else{
-                            if (!value.endsWith("/") || !value.endsWith("\\")){
-                                value = value + "/";
+                            if ((System.getProperty("os.name").toLowerCase().startsWith("windows"))){
+                                conf.setLogScriptsPath((Paths.get(value).toString() + "\\"));
+                            }else{
+                                conf.setLogScriptsPath((Paths.get(value).toString() + "/"));
                             }
-                            conf.setLogScriptsPath(value);
                         }
-                    }else if(attribute.equals("alertScriptsPath")){
+                    }
+
+                    //Where alerts scripts are located (URI)
+                    else if(attribute.equals("alertScriptsPath")){
                         if(value.equals(".")){
                             conf.setAlertScriptsPath(System.getProperty("user.dir").replaceAll("\\\\","/")+"/alerts/");
 
                         }else{
-                            if (!value.endsWith("/") || !value.endsWith("\\")){
-                                value = value + "/";
+                            if ((System.getProperty("os.name").toLowerCase().startsWith("windows"))){
+                                conf.setAlertScriptsPath((Paths.get(value).toString()+"\\"));
+                            }else{
+                                conf.setAlertScriptsPath((Paths.get(value).toString()+"/"));
                             }
-                            conf.setAlertScriptsPath(value);
                         }
                     }
                 }
