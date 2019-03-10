@@ -2,12 +2,10 @@ package Utils;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 
 public class LogExe extends Thread {
     private Process pr;
-    private String fileName;
-    private String logDir;
+    private String fileName, logDir;
 
     public  LogExe( String fileName, String logDir){
         this.fileName = fileName;
@@ -17,7 +15,8 @@ public class LogExe extends Thread {
     public void run() {
         Runtime rt = Runtime.getRuntime();
         try {
-            pr = rt.exec("python "+fileName, null, new File(logDir));
+            //Runs the command "python <Path to the script>" in logDir Path
+            pr = rt.exec("python " + fileName, null, new File(logDir));
         } catch (IOException e) {
             e.printStackTrace();
         }

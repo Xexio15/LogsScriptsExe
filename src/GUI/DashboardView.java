@@ -4,7 +4,7 @@ import javax.swing.*;
 
 public class DashboardView implements Tab {
     private JPanel mainPanel;
-    private String name = "DashboardView";
+    private String name = "Dashboard";
 
 
     @Override

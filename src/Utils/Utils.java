@@ -1,12 +1,19 @@
 package Utils;
 
 import javax.swing.*;
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.*;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Properties;
 
 public final class Utils {
+    public static final String[] ALL_IPS = {"192.168.2.10", "192.168.2.11", "192.168.2.12", "192.168.1.10", "192.168.1.11", "192.168.1.12", "192.168.1.13", "192.168.1.14", "192.168.1.15", "192.168.1.20", "192.168.1.21", "192.168.1.22"};
+    public static final String [] LINUX_IPS = {"192.168.2.10", "192.168.2.11", "192.168.2.12", "192.168.1.10", "192.168.1.11", "192.168.1.12", "192.168.1.13", "192.168.1.14", "192.168.1.15"};
+    public static final String [] WINDOWS_IPS = {"192.168.1.20", "192.168.1.21", "192.168.1.22"};
+    public static final String DATABASE_IP = "192.168.0.10";
+
     /**
      * Updates combo boxes items
      * @param combo Component to update
@@ -20,7 +27,6 @@ public final class Utils {
                 combo.addItem(entry.getFileName().toString());
             }
         } catch (DirectoryIteratorException ex) {
-            // I/O error encounted during the iteration, the cause is an IOException
             throw ex.getCause();
         }
     }
@@ -32,6 +38,14 @@ public final class Utils {
         Configuration conf = Configuration.getInstance();
         List<String> lines;
         try {
+            if (!Files.exists(Paths.get("SIEM.conf"))){
+                generateConfFile();
+            }
+
+            if (!Files.exists(Paths.get("/logs")) || !Files.exists(Paths.get("/alerts")) || !Files.exists(Paths.get("/generated_logs"))){
+                createDirectories();
+            }
+
             lines = Files.readAllLines(Paths.get("SIEM.conf"));
 
             for(String line : lines){
@@ -40,19 +54,20 @@ public final class Utils {
                 else{
 
                     line = line.replaceAll("\\\\","/");
-                    System.out.println(line);
                     String[] sep = line.split(":",2);
                     String attribute = sep[0];
                     attribute = attribute.replaceAll(" ","");
+
                     while (sep[1].startsWith(" ")){
                         sep[1] = sep[1].replaceFirst(" ", "");
                     }
-                    String value = Paths.get(sep[1]).toString();
+
+                    String value = sep[1];
 
                     //Where logs will be written (URI)
                     if (attribute.equals("logsPath")){
                         if(value.equals(".")){
-                            conf.setLogsPath(System.getProperty("user.dir").replaceAll("\\\\","/")+"/generated_logs/");
+                            conf.setLogsPath(System.getProperty("user.dir").replaceAll("\\\\","/") + "/generated_logs/");
                         }else {
                             conf.setLogsPath(Paths.get(value).toString());
                         }
@@ -66,7 +81,7 @@ public final class Utils {
                     else if(attribute.equals("logScriptsPath")){
                         //If value = . then default URI
                         if(value.equals(".")){
-                            conf.setLogScriptsPath(System.getProperty("user.dir").replaceAll("\\\\","/")+"/logs/");
+                            conf.setLogScriptsPath(System.getProperty("user.dir").replaceAll("\\\\","/") + "/logs/");
                         }
 
                         else{
@@ -81,13 +96,13 @@ public final class Utils {
                     //Where alerts scripts are located (URI)
                     else if(attribute.equals("alertScriptsPath")){
                         if(value.equals(".")){
-                            conf.setAlertScriptsPath(System.getProperty("user.dir").replaceAll("\\\\","/")+"/alerts/");
+                            conf.setAlertScriptsPath(System.getProperty("user.dir").replaceAll("\\\\","/") + "/alerts/");
 
                         }else{
                             if ((System.getProperty("os.name").toLowerCase().startsWith("windows"))){
-                                conf.setAlertScriptsPath((Paths.get(value).toString()+"\\"));
+                                conf.setAlertScriptsPath((Paths.get(value).toString() + "\\"));
                             }else{
-                                conf.setAlertScriptsPath((Paths.get(value).toString()+"/"));
+                                conf.setAlertScriptsPath((Paths.get(value).toString() + "/"));
                             }
                         }
                     }
@@ -98,5 +113,47 @@ public final class Utils {
         }
 
 
+    }
+
+
+    private static void generateConfFile(){
+        List<String> lines = Arrays.asList(
+                "#Evade spaces at the end of a line",
+                "#All must be full Paths",
+                "#A . determines that will use the current path",
+                "#Every Path to a folder must exists, the program will not create any folder",
+                "",
+                "#Path where logs are written Linux logs: /var/log/test",
+                "#Default: ./generated_logs",
+                "logsPath : .",
+                "",
+                "#Path where log scripts are",
+                "#Default: ./logs",
+                "logScriptsPath : .",
+                "",
+                "#Path where alert scripts are",
+                "#Default ./alerts",
+                "alertScriptsPath : ."
+        );
+
+        Path file = Paths.get("SIEM.conf");
+
+        try {
+            Files.write(file, lines, Charset.forName("UTF-8"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void createDirectories(){
+        if (!Files.exists(Paths.get("/logs"))){
+            new File("./logs").mkdirs();
+        }
+        if (!Files.exists(Paths.get("/alerts"))){
+            new File("./alerts").mkdirs();
+        }
+        if (!Files.exists(Paths.get("/generated_logs"))){
+            new File("./generated_logs").mkdirs();
+        }
     }
 }

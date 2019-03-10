@@ -13,15 +13,17 @@ public class ScriptsView implements Tab{
     private JTextArea textArea1;
     private JComboBox logsCombo, alertsCombo;
     private JTextField logArguments, alertArguments;
-    private JFrame frame;
     private ArrayList<LogExe> threads = new ArrayList<LogExe>();
     private Configuration conf = Configuration.getInstance();
-    public String name = "Scripts";
+    private String name = "Scripts";
 
     public ScriptsView() {
 
         startLoggingButton.addActionListener(new ActionListener() {
             @Override
+            /**
+             * Runs selected Log Script
+             */
             public void actionPerformed(ActionEvent e) {
                 LogExe p = new LogExe(conf.getLogScriptsPath()+logsCombo.getSelectedItem()+" "+logArguments.getText(), conf.getLogsPath());
                 p.start();
@@ -30,8 +32,12 @@ public class ScriptsView implements Tab{
             }
         });
 
+
         triggerAlertsButton.addActionListener(new ActionListener() {
             @Override
+            /**
+             * Runs selected Alert Script
+             */
             public void actionPerformed(ActionEvent e) {
                 LogExe p = new LogExe(conf.getAlertScriptsPath()+alertsCombo.getSelectedItem()+" "+alertArguments.getText(), conf.getLogsPath());
                 p.start();
@@ -40,6 +46,9 @@ public class ScriptsView implements Tab{
 
         stopLoggingButton.addActionListener(new ActionListener() {
             @Override
+            /**
+             * Ends all threads stopping the scripts
+             */
             public void actionPerformed(ActionEvent e) {
                 for (LogExe l : threads){
                     l.kill();
@@ -50,6 +59,9 @@ public class ScriptsView implements Tab{
 
         demoButton.addActionListener(new ActionListener() {
             @Override
+            /**
+             * Launches the demo network
+             */
             public void actionPerformed(ActionEvent e) {
                 DemoNetwork demo = new DemoNetwork();
                 demo.launchNetwork(threads,textArea1);
@@ -59,6 +71,9 @@ public class ScriptsView implements Tab{
 
         logsCombo.addPopupMenuListener(new PopupMenuListener() {
             @Override
+            /**
+             * Updates when opening
+             */
             public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
                 update();
             }
@@ -72,6 +87,9 @@ public class ScriptsView implements Tab{
 
         alertsCombo.addPopupMenuListener(new PopupMenuListener() {
             @Override
+            /**
+             * Updates when opening
+             */
             public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
                 update();
             }
@@ -89,14 +107,25 @@ public class ScriptsView implements Tab{
 
     }
 
+    /**
+     *
+     * @return The Main Panel of the View
+     */
     public JPanel getPanel(){
         return mainPanel;
     }
 
+    /**
+     *
+     * @return The name of the tab
+     */
     public String getName(){
         return name;
     }
 
+    /**
+     * Ends all threads before closing the GUI
+     */
     public void close(){
         for (LogExe l : threads) {
             l.kill();
@@ -104,6 +133,9 @@ public class ScriptsView implements Tab{
         textArea1.setText("");
     }
 
+    /**
+     * Updates scripts Comboboxes
+     */
     public void update(){
         try {
             Utils.updateComboBox(logsCombo, conf.getLogScriptsPath());
