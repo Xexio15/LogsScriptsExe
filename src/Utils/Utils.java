@@ -106,6 +106,10 @@ public final class Utils {
                             }
                         }
                     }
+
+                    else if(attribute.equals("python-exec")){
+                        conf.setPython_exec(value);
+                    }
                 }
             }
         } catch (IOException e) {
@@ -133,7 +137,10 @@ public final class Utils {
                 "",
                 "#Path where alert scripts are",
                 "#Default ./alerts",
-                "alertScriptsPath : ."
+                "alertScriptsPath : .",
+                "",
+                "#Python executable",
+                "python-exec : python"
         );
 
         Path file = Paths.get("SIEM.conf");

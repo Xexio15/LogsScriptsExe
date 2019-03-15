@@ -3,6 +3,7 @@ package Utils;
 public class Configuration {
     private static final Configuration INSTANCE = new Configuration();
     private String logsPath, logScriptsPath, alertScriptsPath;
+    private String python_exec = "python";
 
     private Configuration() {}
 
@@ -62,4 +63,11 @@ public class Configuration {
         this.alertScriptsPath = alertScriptsPath;
     }
 
+    public String getPython_exec(){
+        return python_exec;
+    }
+
+    public void setPython_exec(String python_exec){
+        this.python_exec = python_exec;
+    }
 }

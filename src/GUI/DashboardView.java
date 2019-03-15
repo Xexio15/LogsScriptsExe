@@ -4,6 +4,7 @@ import javax.swing.*;
 
 public class DashboardView implements Tab {
     private JPanel mainPanel;
+    private JList list1;
     private String name = "Dashboard";
 
 
