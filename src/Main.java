@@ -1,5 +1,9 @@
-import GUI.*;
-import Utils.*;
+import GUI.DashboardView;
+import GUI.ScriptsView;
+import GUI.Tab;
+import Utils.Configuration;
+import Utils.Utils;
+
 import javax.swing.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -56,6 +60,7 @@ public class Main extends JPanel  {
 
     }
     public static void main(String[] args) {
+
         Main m = new Main();
     }
 }
