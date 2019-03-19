@@ -4,6 +4,8 @@ import Alerts.AlertChecker;
 import Alerts.AlertObject;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -14,6 +16,7 @@ import java.util.Observer;
 public class DashboardView implements Tab, Observer {
     private JPanel mainPanel;
     private JList list1;
+    private JTextArea alertsText;
     private String name = "Dashboard";
     private DefaultListModel<AlertObject> model;
 
@@ -29,6 +32,15 @@ public class DashboardView implements Tab, Observer {
                     AlertObject a = (AlertObject)(list1.getModel().getElementAt(list1.getSelectedIndex()));
                     JOptionPane.showMessageDialog(null, a.fullMessage);
                 }
+            }
+        });
+
+        list1.addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent listSelectionEvent) {
+                AlertObject a = (AlertObject)list1.getModel().getElementAt(list1.getSelectedIndex());
+                alertsText.setText("");
+                alertsText.setText(a.fullMessage);
             }
         });
     }
