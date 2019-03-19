@@ -52,8 +52,8 @@ while True:
 
     if message_id == 0:
         log = '%ASA-6-605004: Login denied from' + random.choice(ips) + '/13269 to outside:' + random.choice(ips) + '/ssh for user "root"'
-    elif message_id == 1:
-        log = '%ASA-4-405001: Received ARP request collision from ' + random.choice(random_ips) + '/' + random_MAC() + ' on interface inside'
+    #elif message_id == 1:
+    #    log = '%ASA-4-405001: Received ARP request collision from ' + random.choice(random_ips) + '/' + random_MAC() + ' on interface inside'
     elif message_id == 2:
         log = '%ASA-6-604101: DHCP client interface outside: Allocated ip = ' + random.choice(ips) + ', mask = 255.255.255.0, gw = ' + gateway
     elif message_id == 3:

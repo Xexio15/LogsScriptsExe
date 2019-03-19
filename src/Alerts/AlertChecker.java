@@ -16,6 +16,8 @@ public class AlertChecker extends Thread {
             try {
                 aq.strangeLoginSSH();
                 aq.portScanning();
+                aq.arpPoisoning();
+                aq.criticalURLs();
             } catch (UnknownHostException e) {
                 e.printStackTrace();
             }

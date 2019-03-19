@@ -110,6 +110,10 @@ public final class Utils {
                     else if(attribute.equals("python-exec")){
                         conf.setPython_exec(value);
                     }
+
+                    else if (attribute.equals("urlBlacklist")){
+                        conf.setBlacklist(listParser(value));
+                    }
                 }
             }
         } catch (IOException e) {
@@ -119,6 +123,12 @@ public final class Utils {
 
     }
 
+    private static String listParser(String list){
+        list = list.replaceAll("\\[", "");
+        list = list.replaceAll("]", "");
+        list = list.replaceAll(",","");
+        return list;
+    }
 
     private static void generateConfFile(){
         List<String> lines = Arrays.asList(
@@ -140,7 +150,10 @@ public final class Utils {
                 "alertScriptsPath : .",
                 "",
                 "#Python executable",
-                "python-exec : python"
+                "python-exec : python",
+                "",
+                "#URLs Blacklist with this format [url1, url2,...]",
+                "urlBlacklist : []"
         );
 
         Path file = Paths.get("SIEM.conf");

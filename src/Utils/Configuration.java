@@ -1,9 +1,13 @@
 package Utils;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 public class Configuration {
     private static final Configuration INSTANCE = new Configuration();
     private String logsPath, logScriptsPath, alertScriptsPath;
     private String python_exec = "python";
+    private ArrayList<String> blacklist = new ArrayList();
 
     private Configuration() {}
 
@@ -69,5 +73,14 @@ public class Configuration {
 
     public void setPython_exec(String python_exec){
         this.python_exec = python_exec;
+    }
+
+    public void setBlacklist(String list){
+        String[] splited = list.split("\\s+");
+        blacklist.addAll(Arrays.asList(splited));
+    }
+
+    public ArrayList<String> getBlacklist(){
+        return blacklist;
     }
 }

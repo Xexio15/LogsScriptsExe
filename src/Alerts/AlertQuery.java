@@ -1,6 +1,7 @@
 package Alerts;
 
 import GUI.AlertsView;
+import Utils.Configuration;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.transport.TransportClient;
@@ -9,6 +10,7 @@ import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.metrics.cardinality.Cardinality;
@@ -21,6 +23,8 @@ import java.util.Collection;
 import java.util.Observable;
 
 public class AlertQuery extends Observable {
+    private Configuration conf = Configuration.getInstance();
+
     public AlertQuery(AlertsView v){
         this.addObserver(v);
     }
@@ -244,6 +248,84 @@ public class AlertQuery extends Observable {
         }
 
         client.close();
+    }
+
+    public void arpPoisoning() throws UnknownHostException {
+        /**
+         * {
+         * 	"query": {
+         *     	"bool": {
+         *     		"must": [
+         *                                {
+         *     				"match_phrase" : {
+         *     					"Mensaje" : "Received ARP"
+         *                    }
+         *                },
+         *                {
+         * 	        		"match": {
+         * 	            		"Fuente": "asa"
+         *                    }
+         *                },
+         *                {
+         * 		        	"range": {
+         * 		            	"@timestamp": {
+         * 		            		"gte": "now-15s"
+         *                        }
+         *                    }
+         *                }
+         *     		]
+         *     	}
+         *   	}
+         * }
+         */
+
+        TransportClient client = new PreBuiltTransportClient(Settings.EMPTY).addTransportAddress(new TransportAddress(InetAddress.getByName("localhost"), 9300));
+
+        SearchRequestBuilder sr = client.prepareSearch().setSize(1).setQuery(QueryBuilders.boolQuery()
+                .must(QueryBuilders.termQuery("_index","asa-*")) //Index starts with asa-
+                .must(QueryBuilders.matchQuery("Fuente","asa")) //Field "Fuente" equals asa
+                .must(QueryBuilders.rangeQuery("@timestamp").gte("now-15s").includeUpper(false)) //From 15s before;
+                .must(QueryBuilders.matchPhraseQuery("Mensaje","Received ARP")));
+
+        SearchResponse r = sr.execute().actionGet();
+        SearchHits hits = r.getHits();
+
+        if (hits.getTotalHits() > 0){
+            SearchHit hit = hits.getAt(0);
+            setChanged();
+            notifyObservers(new AlertObject("Possible ARP Poisoning from "+hit.getSourceAsMap().get("Origen")+" / "+ hit.getSourceAsMap().get("SRC_MAC"),
+                            "The machine "+hit.getSourceAsMap().get("Origen")+" / "+ hit.getSourceAsMap().get("SRC_MAC") +" could be trying an ARP Poisoning to sniff the Network Traffic",
+                    (String)hit.getSourceAsMap().get("message"),
+                            2
+                    )
+            );
+        }
+        client.close();
+    }
+
+    public void criticalURLs() throws UnknownHostException {
+        TransportClient client = new PreBuiltTransportClient(Settings.EMPTY).addTransportAddress(new TransportAddress(InetAddress.getByName("localhost"), 9300));
+
+        SearchRequestBuilder sr = client.prepareSearch().setQuery(QueryBuilders.boolQuery()
+                .must(QueryBuilders.termQuery("_index","asa-*")) //Index starts with asa-
+                .must(QueryBuilders.matchQuery("Fuente","asa")) //Field "Fuente" equals asa
+                .must(QueryBuilders.rangeQuery("@timestamp").gte("now-15s").includeUpper(false)) //From 15s before;
+                .must(QueryBuilders.matchPhraseQuery("Mensaje","Accessed URL")));
+
+        SearchResponse r = sr.execute().actionGet();
+        SearchHits hits = r.getHits();
+
+        for(SearchHit hit : hits){
+            if (conf.getBlacklist().contains((hit.getSourceAsMap().get("URL")))){
+                setChanged();
+                notifyObservers(new AlertObject("Blacklisted URL accessed",
+                                "The machine "+hit.getSourceAsMap().get("Origen")+" tried to access to a blacklisted URL: "+hit.getSourceAsMap().get("URL_IP")+" -> "+hit.getSourceAsMap().get("URL"),
+                                (String)hit.getSourceAsMap().get("message"),
+                                1
+                        )
+                );
+            }
+        }
     }
 
 }
