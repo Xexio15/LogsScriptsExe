@@ -11,6 +11,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.elasticsearch.search.aggregations.metrics.cardinality.Cardinality;
 import org.elasticsearch.search.aggregations.metrics.tophits.TopHits;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 
@@ -127,9 +128,116 @@ public class AlertQuery extends Observable {
                                 ips+"\n\n" +
                                 "Logs:\n" +
                                 logs,
-                    1));
+                    1
+                    )
+            );
+        }
+        client.close();
+
+    }
+
+    public void portScanning() throws UnknownHostException {
+
+        String json =   "{\n" +
+                "       \"properties\": {\n" +
+                "           \"Destino\": {\n" +
+                "               \"type\": \"text\",\n" +
+                "               \"fielddata\": true\n" +
+                "           },\n" +
+                "           \"Origen\": {\n" +
+                "               \"type\": \"text\",\n" +
+                "               \"fielddata\": true\n" +
+                "           },\n" +
+                "           \"Dst_Port\": {\n" +
+                "               \"type\": \"text\",\n" +
+                "               \"fielddata\": true\n" +
+                "           }\n" +
+                "       }\n" +
+
+                "}\n";
+
+        TransportClient client = new PreBuiltTransportClient(Settings.EMPTY).addTransportAddress(new TransportAddress(InetAddress.getByName("localhost"), 9300));
+        client.admin().indices().preparePutMapping("asa-*").setType("doc").setSource(json, XContentType.JSON).get();
+
+        /**
+         * {
+         * 	"size" : 0,
+         * 	"query": {
+         *     	"bool": {
+         *     		"must": [
+         *                                {
+         * 	        		"match": {
+         * 	            		"Fuente": "asa"
+         *                    }
+         *                },
+         *                {
+         * 		        	"range": {
+         * 		            	"@timestamp": {
+         * 		            		"gte": "now-15s"
+         *                        }
+         *                    }
+         *                }
+         *     		]
+         *     	}
+         * 	},
+         * 	"aggs" : {
+         *   		"by_srcIP" : {
+         *   			"terms": {
+         *         		"field": "Origen"
+         *   			},
+         *   			"aggs" : {
+         *   				"by_dstIP" :{
+         *   					"terms" : {
+         *   						"field" : "Destino"
+         *                    },
+         * 	  				"aggs": {
+         * 		            	"unique_port_count": {
+         * 		            		"cardinality": {
+         * 		                		"field": "Dst_Port"
+         *                            }
+         *                        }
+         *                    }*   				}
+         *            }
+         *        }*   	}
+         * }
+         */
+
+        SearchRequestBuilder sr = client.prepareSearch().setSize(0).setQuery(QueryBuilders.boolQuery()
+                .must(QueryBuilders.termQuery("_index","asa-*")) //Index starts with asa-
+                .must(QueryBuilders.matchQuery("Fuente","asa")) //Field "Fuente" equals asa
+                .must(QueryBuilders.rangeQuery("@timestamp").gte("now-15s").includeUpper(false))) //From 15s before
+                .addAggregation(AggregationBuilders.terms("by_srcIP").field("Origen") //Group by Origen
+                        .subAggregation(AggregationBuilders.terms("by_dstIP").field("Destino")//Group by Destino
+                                .subAggregation(AggregationBuilders.cardinality("unique_port_count").field("Dst_Port")))); //Get port count
+
+        SearchResponse r = sr.execute().actionGet();
+
+
+        Terms agg = r.getAggregations().get("by_srcIP");
+        Collection<Terms.Bucket> buckets = (Collection<Terms.Bucket>) agg.getBuckets();
+
+        String srcIP = "";
+        for (Terms.Bucket bucket : buckets) {
+            srcIP = bucket.getKeyAsString();
+            if (bucket.getDocCount() != 0) {
+                Terms terms = bucket.getAggregations().get("by_dstIP");
+                Collection<Terms.Bucket> bkts = (Collection<Terms.Bucket>) terms.getBuckets();
+
+                for (Terms.Bucket b : bkts) {
+                    Cardinality c = ((Cardinality) b.getAggregations().get("unique_port_count"));
+                    if (c.getValue() > 15){
+                        setChanged();
+                        notifyObservers(new AlertObject("Port Scanning from "+srcIP,
+                                "The IP "+srcIP+" has tried to connect to "+ c.getValue() + " ports, could potentially be a port scanning",
+                                2
+                                )
+                        );
+                    }
+                }
+            }
         }
 
+        client.close();
     }
 
 }

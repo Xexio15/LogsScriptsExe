@@ -15,11 +15,12 @@ public class AlertChecker extends Thread {
         while (true){
             try {
                 aq.strangeLoginSSH();
+                aq.portScanning();
             } catch (UnknownHostException e) {
                 e.printStackTrace();
             }
             try {
-                TimeUnit.SECONDS.sleep(10);
+                TimeUnit.SECONDS.sleep(5);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
