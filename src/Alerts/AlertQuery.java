@@ -1,6 +1,6 @@
 package Alerts;
 
-import GUI.DashboardView;
+import GUI.AlertsView;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.transport.TransportClient;
@@ -17,12 +17,11 @@ import org.elasticsearch.transport.client.PreBuiltTransportClient;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Observable;
 
 public class AlertQuery extends Observable {
-    public AlertQuery(DashboardView v){
+    public AlertQuery(AlertsView v){
         this.addObserver(v);
     }
 
@@ -125,9 +124,8 @@ public class AlertQuery extends Observable {
                     "Strange login alert",
                     "The user " + usr + " logged in from " + number + " different IPs in a short ammount of time\n" +
                                 "IPs:\n" +
-                                ips+"\n\n" +
-                                "Logs:\n" +
-                                logs,
+                                ips,
+                    logs,
                     1
                     )
             );
@@ -208,7 +206,8 @@ public class AlertQuery extends Observable {
                 .must(QueryBuilders.rangeQuery("@timestamp").gte("now-15s").includeUpper(false))) //From 15s before
                 .addAggregation(AggregationBuilders.terms("by_srcIP").field("Origen") //Group by Origen
                         .subAggregation(AggregationBuilders.terms("by_dstIP").field("Destino")//Group by Destino
-                                .subAggregation(AggregationBuilders.cardinality("unique_port_count").field("Dst_Port")))); //Get port count
+                                .subAggregation(AggregationBuilders.cardinality("unique_port_count").field("Dst_Port"))//Get port count
+                                    .subAggregation(AggregationBuilders.topHits("source_document").size(100))));
 
         SearchResponse r = sr.execute().actionGet();
 
@@ -217,6 +216,7 @@ public class AlertQuery extends Observable {
         Collection<Terms.Bucket> buckets = (Collection<Terms.Bucket>) agg.getBuckets();
 
         String srcIP = "";
+        String logs = "";
         for (Terms.Bucket bucket : buckets) {
             srcIP = bucket.getKeyAsString();
             if (bucket.getDocCount() != 0) {
@@ -224,11 +224,17 @@ public class AlertQuery extends Observable {
                 Collection<Terms.Bucket> bkts = (Collection<Terms.Bucket>) terms.getBuckets();
 
                 for (Terms.Bucket b : bkts) {
-                    Cardinality c = ((Cardinality) b.getAggregations().get("unique_port_count"));
+                    Cardinality c = b.getAggregations().get("unique_port_count");
                     if (c.getValue() > 15){
+                        TopHits tophits = b.getAggregations().get("source_document");
+
+                        for (SearchHit sh : tophits.getHits()) {
+                            logs = logs + sh.getSourceAsMap().get("message")+"\n";
+                        }
                         setChanged();
                         notifyObservers(new AlertObject("Port Scanning from "+srcIP,
                                 "The IP "+srcIP+" has tried to connect to "+ c.getValue() + " ports, could potentially be a port scanning",
+                                logs,
                                 2
                                 )
                         );

@@ -9,18 +9,17 @@ import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
 import java.util.Observable;
 import java.util.Observer;
 
-public class DashboardView implements Tab, Observer {
+public class AlertsView implements Tab, Observer {
     private JPanel mainPanel;
     private JList list1;
     private JTextArea alertsText;
-    private String name = "Dashboard";
+    private String name = "Alerts";
     private DefaultListModel<AlertObject> model;
 
-    public DashboardView(){
+    public AlertsView(){
         new AlertChecker(this).start();
         model = new DefaultListModel();
         list1.setModel(model);
@@ -40,7 +39,12 @@ public class DashboardView implements Tab, Observer {
             public void valueChanged(ListSelectionEvent listSelectionEvent) {
                 AlertObject a = (AlertObject)list1.getModel().getElementAt(list1.getSelectedIndex());
                 alertsText.setText("");
-                alertsText.setText(a.fullMessage);
+                alertsText.setText(a.fullMessage+"\n");
+                if(!a.logs.equals("")) {
+                    alertsText.append("===============================================================\n\n");
+                    alertsText.append("Logs:\n\n");
+                    alertsText.append(a.logs);
+                }
             }
         });
     }

@@ -1,6 +1,6 @@
 package Alerts;
 
-import GUI.DashboardView;
+import GUI.AlertsView;
 
 import java.net.UnknownHostException;
 import java.util.concurrent.TimeUnit;
@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 public class AlertChecker extends Thread {
     private AlertQuery aq;
 
-    public AlertChecker(DashboardView v){
+    public AlertChecker(AlertsView v){
         this.aq = new AlertQuery(v);
     }
     public void run() {
@@ -20,7 +20,7 @@ public class AlertChecker extends Thread {
                 e.printStackTrace();
             }
             try {
-                TimeUnit.SECONDS.sleep(5);
+                TimeUnit.SECONDS.sleep(10);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
