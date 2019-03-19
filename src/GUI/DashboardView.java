@@ -50,8 +50,8 @@ public class DashboardView implements Tab, Observer {
 
     @Override
     public void update(Observable observable, Object o) {
-        ArrayList<AlertObject> alerts = (ArrayList<AlertObject>) o;
-        model.addElement(((alerts.get(alerts.size()-1))));
+        AlertObject alert = (AlertObject) o;
+        model.addElement(alert);
     }
 
     private static class SeverityRenderer extends DefaultListCellRenderer {

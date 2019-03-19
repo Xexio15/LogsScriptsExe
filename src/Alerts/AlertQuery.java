@@ -8,8 +8,10 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.elasticsearch.search.aggregations.metrics.tophits.TopHits;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 
 import java.net.InetAddress;
@@ -19,8 +21,6 @@ import java.util.Collection;
 import java.util.Observable;
 
 public class AlertQuery extends Observable {
-    private ArrayList<AlertObject> alerts = new ArrayList<>();
-
     public AlertQuery(DashboardView v){
         this.addObserver(v);
     }
@@ -45,40 +45,89 @@ public class AlertQuery extends Observable {
         TransportClient client = new PreBuiltTransportClient(Settings.EMPTY).addTransportAddress(new TransportAddress(InetAddress.getByName("localhost"), 9300));
         client.admin().indices().preparePutMapping("sshd-*").setType("doc").setSource(json, XContentType.JSON).get();
 
-        SearchRequestBuilder sr = client.prepareSearch().setSize(1).setQuery(QueryBuilders.boolQuery().must(QueryBuilders.termQuery("_index","sshd-*"))
-                                                    .must(QueryBuilders.matchQuery("Fuente","sshd"))
-                                                    .must(QueryBuilders.rangeQuery("@timestamp").gte("now-15s").includeUpper(false)))
-                                                    .addAggregation(AggregationBuilders.terms("by_username").field("username")
-                                                            .subAggregation(AggregationBuilders.terms("by_ip").field("Origen")));
+
+        /**
+         * {
+         * 	"size" : 0,
+         * 	"query": {
+         *     	"bool": {
+         *     		"must": [
+         *                {
+         * 	        		"match": {
+         * 	            		"Fuente": "sshd"
+         *                    }
+         *                },
+         *                {
+         * 		        	"range": {
+         * 		            	"@timestamp": {
+         * 		            		"gte": "now-15s"
+         *                        }
+         *                    }
+         *                }
+         *     		]
+         *     	}
+         * 	},
+         * 	"aggs" : {
+         *   		"by_username" : {
+         *   			"terms": {
+         *         		    "field": "username"
+         *   			},
+         *   			"aggs" : {
+         * 	  			    "source_document": {
+         * 	                	"top_hits": {
+         * 	                    	"_source": {
+         * 	                    		"include": [
+         * 	                     		"Origen","message"
+         * 	                    		]
+         *                          }
+         *                      }
+         *                  }
+         *              }
+         *          }
+         *      }
+         * }
+         */
+        SearchRequestBuilder sr = client.prepareSearch().setSize(0).setQuery(QueryBuilders.boolQuery()
+                                                    .must(QueryBuilders.termQuery("_index","sshd-*")) //Index starts with sshd-
+                                                    .must(QueryBuilders.matchQuery("Fuente","sshd")) //Field "Fuente" equals sshd
+                                                    .must(QueryBuilders.rangeQuery("@timestamp").gte("now-15s").includeUpper(false))) //From 15s before
+                                                    .addAggregation(AggregationBuilders.terms("by_username").field("username") //Group by username
+                                                            .subAggregation(AggregationBuilders.topHits("source_document"))); //Get the source doc of each IP
 
         SearchResponse r = sr.execute().actionGet();
         Terms agg = r.getAggregations().get("by_username");
         Collection<Terms.Bucket> buckets = (Collection<Terms.Bucket>) agg.getBuckets();
         String ips = "";
         String usr = "";
+        String logs = "";
         int number = 0;
+
         for (Terms.Bucket bucket : buckets) {
 
             if (bucket.getDocCount() != 0) {
-                Terms terms = bucket.getAggregations().get("by_ip");
-                //System.out.println(terms.getBuckets().size());
-                Collection<Terms.Bucket> bkts = (Collection<Terms.Bucket>) terms.getBuckets();
-                for (Terms.Bucket b : bkts) {
-                    if (terms.getBuckets().size() > 1) {
-                        ips = ips+((String) b.getKey())+"\n";
+                TopHits tophits = bucket.getAggregations().get("source_document");
+
+                for (SearchHit b : tophits.getHits()) {
+                    if (tophits.getHits().totalHits > 1) {
+                        ips = ips+((String) b.getSourceAsMap().get("Origen"))+"\n";
                         usr = (String) bucket.getKey();
-                        number = terms.getBuckets().size();
+                        number = (int)tophits.getHits().totalHits;
+                        logs = logs + b.getSourceAsMap().get("message") + "\n";
                     }
-
-
                 }
-
             }
         }
+
         if (!ips.equals("")) {
-            alerts.add(new AlertObject("Strange login alert", "The user " + usr + " logged in from " + number + " different IPs in a short ammount of time\nIPs:\n" + ips, 1));
             setChanged();
-            notifyObservers(alerts);
+            notifyObservers(new AlertObject(
+                    "Strange login alert",
+                    "The user " + usr + " logged in from " + number + " different IPs in a short ammount of time\n" +
+                                "IPs:\n" +
+                                ips+"\n\n" +
+                                "Logs:\n" +
+                                logs,
+                    1));
         }
 
     }
