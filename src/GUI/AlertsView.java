@@ -2,15 +2,17 @@ package GUI;
 
 import Alerts.AlertChecker;
 import Alerts.AlertObject;
+import Utils.Utils;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.Observable;
-import java.util.Observer;
+import java.util.*;
 
 public class AlertsView implements Tab, Observer {
     private JPanel mainPanel;
@@ -29,7 +31,31 @@ public class AlertsView implements Tab, Observer {
             public void mouseClicked(MouseEvent evt) {
                 if (evt.getClickCount() == 2) {
                     AlertObject a = (AlertObject)(list1.getModel().getElementAt(list1.getSelectedIndex()));
-                    JOptionPane.showMessageDialog(null, a.fullMessage);
+                    ArrayList<String> fields = new ArrayList();
+                    ArrayList<Map<String,Object>> map = a.getMap();
+                    String [][] rows = new String [map.size()][];
+                    for (String key : map.get(0).keySet()){
+                        fields.add(key);
+                    }
+                    for (int j = 0; j < map.size(); j++){
+                        Map<String,Object> m = map.get(j);
+                        String[] row = new String[m.size()];
+                        for (int i = 0; i < fields.size(); i++){
+                            row[i] = (m.get(fields.get(i)).toString());
+                        }
+                        rows[j] = row;
+                    }
+                    TableModel model = new DefaultTableModel(rows, fields.toArray());
+                    JTable table = new JTable(model);
+                    JPanel pan=new JPanel();
+                    pan.setLayout(new BorderLayout());
+                    pan.add(table);
+                    Dialog jd=new JDialog();
+                    pan.add(new JScrollPane(table));
+                    jd.add(pan);
+                    jd.setSize(new Dimension(200,100));
+                    jd.show();
+                    //JOptionPane.showMessageDialog(pan, a.fullMessage);
                 }
             }
         });

@@ -1,4 +1,4 @@
-import datetime, random, time
+import datetime, random, time,sys
 from ipaddress import IPv4Address
 from random import getrandbits
 
@@ -25,7 +25,12 @@ date = months[m] + " " + d + " " + date[11:19]
 ip = str(IPv4Address(bits))
 log = date + " server sshd[" + str(random.randint(5000,20000)) + "]: " + "Invalid user admin from " + ip + "\n" + date + " server sshd[" + str(random.randint(5000,20000)) + "]: Failed password for invalid user admin from " + ip
 
+if len(sys.argv) > 1:
+    times = int(sys.argv[1])
+else:
+    times = 50
+
 f = open("sshd.logtest", "a+")
-for i in range(4):
+for i in range(times):
      f.write(log+'\n')
 f.close()

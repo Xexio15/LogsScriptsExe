@@ -13,7 +13,7 @@ public final class Utils {
     public static final String [] LINUX_IPS = {"192.168.2.10", "192.168.2.11", "192.168.2.12", "192.168.1.10", "192.168.1.11", "192.168.1.12", "192.168.1.13", "192.168.1.14", "192.168.1.15"};
     public static final String [] WINDOWS_IPS = {"192.168.1.20", "192.168.1.21", "192.168.1.22"};
     public static final String DATABASE_IP = "192.168.0.10";
-
+    public static final String [] IGNORED_FIELDS = {"offset", "prospector", "source", "Mensaje", "tags", "input", "Fecha", "@version", "beat", "host"};
     /**
      * Updates combo boxes items
      * @param combo Component to update

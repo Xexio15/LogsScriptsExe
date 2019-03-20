@@ -6,22 +6,31 @@ import java.net.UnknownHostException;
 import java.util.concurrent.TimeUnit;
 
 public class AlertChecker extends Thread {
-    private AlertQuery aq;
-
+    private AlertsView v;
     public AlertChecker(AlertsView v){
-        this.aq = new AlertQuery(v);
+        this.v = v;
     }
     public void run() {
         while (true){
             try {
-                aq.strangeLoginSSH();
-                aq.portScanning();
-                aq.arpPoisoning();
-                aq.criticalURLs();
-            } catch (UnknownHostException e) {
-                e.printStackTrace();
-            }
-            try {
+                long startTime = System.currentTimeMillis();
+                new Thread(new AlertQuery(v, AlertQuery.QUERY_TYPE.SSH_STRANGE_LOGIN)).start();
+                TimeUnit.MILLISECONDS.sleep(500);
+
+                new Thread(new AlertQuery(v, AlertQuery.QUERY_TYPE.PORT_SCANNING)).start();
+                TimeUnit.MILLISECONDS.sleep(500);
+
+                new Thread(new AlertQuery(v, AlertQuery.QUERY_TYPE.ARP_POISONING)).start();
+                TimeUnit.MILLISECONDS.sleep(500);
+
+                new Thread(new AlertQuery(v, AlertQuery.QUERY_TYPE.CRITICAL_URLS)).start();
+                TimeUnit.MILLISECONDS.sleep(500);
+
+                new Thread(new AlertQuery(v, AlertQuery.QUERY_TYPE.SSH_BRUTE_FORCE)).start();
+                long stopTime = System.currentTimeMillis();
+                long elapsedTime = stopTime - startTime;
+                System.out.println(elapsedTime);
+
                 TimeUnit.SECONDS.sleep(10);
             } catch (InterruptedException e) {
                 e.printStackTrace();
