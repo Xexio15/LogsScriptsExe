@@ -19,7 +19,7 @@ log = ""
 
 #<date> <type> <protocol> <org_ip> <dst_ip> <org_prt> <dst_prt>
 #Fields: date time action protocol src-ip dst-ip src-port dst-port size tcpflags tcpsyn tcpack tcpwin icmptype icmpcode info path
-for i in range(7):
+for i in range(random.randint(7,20)):
     date = str(datetime.datetime.now())[:19]
     
 
@@ -30,5 +30,5 @@ for i in range(7):
         log = log + date + " DROP " + protocol + " " + random_ip + " " + ip + " " + src_prt + " " + dst_prt + " - - - - - - - RECEIVE\n"
 
 f = open("windowspfirewall.logtest", "a+")
-f.write(log[:-1])
+f.write(log)
 f.close()

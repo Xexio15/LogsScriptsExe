@@ -24,13 +24,11 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Observable;
 
-import static Alerts.AlertQuery.QUERY_TYPE.*;
-
 public class AlertQuery extends Observable implements Runnable{
     private QUERY_TYPE query;
     private Configuration conf = Configuration.getInstance();
     public enum QUERY_TYPE {
-        SSH_STRANGE_LOGIN, PORT_SCANNING, ARP_POISONING, CRITICAL_URLS, SSH_BRUTE_FORCE
+        SSH_STRANGE_LOGIN, PORT_SCANNING, ARP_POISONING, CRITICAL_URLS, SSH_BRUTE_FORCE, SOFTWARE_FIREWALL_DROPS
     }
 
     public AlertQuery(AlertsView v){
@@ -408,6 +406,113 @@ public class AlertQuery extends Observable implements Runnable{
         client.close();
     }
 
+    public void softwareFirewallDrops() throws UnknownHostException{
+        String json =   "{\n" +
+                "       \"properties\": {\n" +
+                "           \"Origen\": {\n" +
+                "               \"type\": \"text\",\n" +
+                "               \"fielddata\": true\n" +
+                "           }\n" +
+                "       }\n" +
+
+                "}\n";
+
+        TransportClient client = new PreBuiltTransportClient(Settings.EMPTY).addTransportAddress(new TransportAddress(InetAddress.getByName("localhost"), 9300));
+        client.admin().indices().preparePutMapping("ufw-*").setType("doc").setSource(json, XContentType.JSON).get();
+        client.admin().indices().preparePutMapping("windows-firewall-*").setType("doc").setSource(json, XContentType.JSON).get();
+
+        SearchRequestBuilder sr = client.prepareSearch().setSize(0).setQuery(QueryBuilders.boolQuery()
+                .must(QueryBuilders.boolQuery()
+                    .should(QueryBuilders.matchQuery("_index","ufw-*"))
+                    .should(QueryBuilders.matchQuery("_index","windows-firewall-*"))) //Index starts with asa-
+                .must(QueryBuilders.rangeQuery("@timestamp").gte("now-15s").includeUpper(false)) //From 15s before;
+                .must(QueryBuilders.boolQuery()
+                    .should(QueryBuilders.matchQuery("Flag","DROP"))
+                    .should(QueryBuilders.matchQuery("Flag", "BLOCK")))
+                )
+                .addAggregation(AggregationBuilders.terms("by_srcIP").field("Origen") //Group by username
+                    .subAggregation(AggregationBuilders.topHits("source_document").size(100)).size(100)); //Get the source doc of each IP
+        ;
+        /**
+         * {
+         * 	"size" : 0,
+         * 	"query": {
+         *     	"bool": {
+         *     		"must": [
+         *                                {
+         *                 	"bool": {
+         *                         "should": [
+         *                             {"match": {"Flag": "BLOCK"}},
+         *                             {"match": {"Flag": "DROP"}}
+         *                         ]
+         *                     }
+         *                 },
+         *                 {
+         *                     "bool": {
+         *                         "should": [
+         *                             {"match": {"Fuente": "UFW"}},
+         *                             {"match": {"Fuente": "Windows-Firewall"}}
+         *                         ]
+         *                     }
+         *                 },
+         *                {
+         * 		        	"range": {
+         * 		            	"@timestamp": {
+         * 		            		"gte": "now-15s"
+         *                        }
+         *                    }
+         *                }
+         *     		]
+         *     	}
+         * 	},
+         * 	"aggs" : {
+         *   		"by_srcIP" : {
+         *   			"terms": {
+         *         		"field": "Origen"
+         *   			},
+         *   		"aggs" : {
+         * 		    "source_document": {
+         * 		      	"top_hits": {
+         * 		      		"size" : 100,
+         * 		          	"_source": {
+         * 		          		"include": [
+         * 		           		"Origen","message"
+         * 		          		]
+         *                   }
+         *                }* 		    }
+         *        }
+         *        }*   	}
+         * }
+         */
+
+        SearchResponse r = sr.execute().actionGet();
+        Terms agg = r.getAggregations().get("by_srcIP");
+        Collection<Terms.Bucket> buckets = (Collection<Terms.Bucket>) agg.getBuckets();
+        String logs = "";
+        ArrayList<Map<String,Object>> mappedLogs = new ArrayList<>();
+        for (Terms.Bucket bucket : buckets) {
+
+            if (bucket.getDocCount() != 0) {
+                TopHits tophits = bucket.getAggregations().get("source_document");
+
+                for (SearchHit b : tophits.getHits()) {
+                    if (bucket.getDocCount() > 5) {
+                        mappedLogs.add(b.getSourceAsMap());
+                        logs = logs + b.getSourceAsMap().get("message") + "\n";
+
+                    }
+                }
+                setChanged();
+                notifyObservers(new AlertObject("Blocked IP: " + bucket.getKeyAsString(),
+                                "The IP " + bucket.getKeyAsString() + " has been blocked "+bucket.getDocCount()+" times",
+                                logs,
+                                1,
+                                mappedLogs
+                        )
+                );
+            }
+        }
+    }
     @Override
     public void run() {
         try {
@@ -426,6 +531,9 @@ public class AlertQuery extends Observable implements Runnable{
                     break;
                 case SSH_BRUTE_FORCE:
                     sshBruteForce();
+                    break;
+                case SOFTWARE_FIREWALL_DROPS:
+                    softwareFirewallDrops();
                     break;
 
             }

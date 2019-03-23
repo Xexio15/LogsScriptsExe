@@ -2,7 +2,6 @@ package Alerts;
 
 import GUI.AlertsView;
 
-import java.net.UnknownHostException;
 import java.util.concurrent.TimeUnit;
 
 public class AlertChecker extends Thread {
@@ -27,6 +26,9 @@ public class AlertChecker extends Thread {
                 TimeUnit.MILLISECONDS.sleep(500);
 
                 new Thread(new AlertQuery(v, AlertQuery.QUERY_TYPE.SSH_BRUTE_FORCE)).start();
+                TimeUnit.MILLISECONDS.sleep(500);
+
+                new Thread(new AlertQuery(v, AlertQuery.QUERY_TYPE.SOFTWARE_FIREWALL_DROPS)).start();
                 long stopTime = System.currentTimeMillis();
                 long elapsedTime = stopTime - startTime;
                 System.out.println(elapsedTime);

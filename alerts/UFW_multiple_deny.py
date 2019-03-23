@@ -65,7 +65,7 @@ spt = str(random.randint(10,10000))
 dpt = str(random.randint(10,10000))
 
 
-for i in range(5):
+for i in range(random.randint(7,20)):
     #Formem la linia de log
     log = date + " "+ip_names[ip]+" " + "kernel: [ " + str(timeUp) + "] [UFW BLOCK] " + inout + " MAC=" + MAC + " " + srcdst + " LEN=" + str(random.randint(10,5000)) + " TOS=0x00 PREC=0x00 TTL=" + str(random.randint(20,100)) + " ID=" + str(random.randint(10000, 99999)) + " DF PROTO=" + protocol + " SPT=" + spt+ " DPT=" + dpt + " LEN=" + str(random.randint(3,300))
 
