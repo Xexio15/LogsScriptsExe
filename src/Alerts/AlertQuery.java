@@ -494,22 +494,23 @@ public class AlertQuery extends Observable implements Runnable{
 
             if (bucket.getDocCount() != 0) {
                 TopHits tophits = bucket.getAggregations().get("source_document");
+                if (bucket.getDocCount() > 5) {
+                    for (SearchHit b : tophits.getHits()) {
 
-                for (SearchHit b : tophits.getHits()) {
-                    if (bucket.getDocCount() > 5) {
                         mappedLogs.add(b.getSourceAsMap());
                         logs = logs + b.getSourceAsMap().get("message") + "\n";
 
+
                     }
+                    setChanged();
+                    notifyObservers(new AlertObject("Blocked IP: " + bucket.getKeyAsString(),
+                                    "The IP " + bucket.getKeyAsString() + " has been blocked " + bucket.getDocCount() + " times",
+                                    logs,
+                                    1,
+                                    mappedLogs
+                            )
+                    );
                 }
-                setChanged();
-                notifyObservers(new AlertObject("Blocked IP: " + bucket.getKeyAsString(),
-                                "The IP " + bucket.getKeyAsString() + " has been blocked "+bucket.getDocCount()+" times",
-                                logs,
-                                1,
-                                mappedLogs
-                        )
-                );
             }
         }
     }
