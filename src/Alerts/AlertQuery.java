@@ -109,42 +109,44 @@ public class AlertQuery extends Observable implements Runnable{
                                                             .subAggregation(AggregationBuilders.topHits("source_document"))); //Get the source doc of each IP
 
         SearchResponse r = sr.execute().actionGet();
-        Terms agg = r.getAggregations().get("by_username");
-        Collection<Terms.Bucket> buckets = (Collection<Terms.Bucket>) agg.getBuckets();
-        String ips = "";
-        String usr = "";
-        String logs = "";
-        int number = 0;
-        ArrayList<Map<String,Object>> mappedLogs = new ArrayList<>();
-        for (Terms.Bucket bucket : buckets) {
+        if(r.getAggregations()!= null) {
+            Terms agg = r.getAggregations().get("by_username");
+            Collection<Terms.Bucket> buckets = (Collection<Terms.Bucket>) agg.getBuckets();
+            String ips = "";
+            String usr = "";
+            String logs = "";
+            int number = 0;
+            ArrayList<Map<String, Object>> mappedLogs = new ArrayList<>();
+            for (Terms.Bucket bucket : buckets) {
 
-            if (bucket.getDocCount() != 0) {
-                TopHits tophits = bucket.getAggregations().get("source_document");
+                if (bucket.getDocCount() != 0) {
+                    TopHits tophits = bucket.getAggregations().get("source_document");
 
-                for (SearchHit b : tophits.getHits()) {
-                    if (tophits.getHits().totalHits > 1 && tophits.getHits().totalHits < 5) {
-                        mappedLogs.add(b.getSourceAsMap());
-                        ips = ips+((String) b.getSourceAsMap().get("Origen"))+"\n";
-                        usr = (String) bucket.getKey();
-                        number = (int)tophits.getHits().totalHits;
-                        logs = logs + b.getSourceAsMap().get("message") + "\n";
+                    for (SearchHit b : tophits.getHits()) {
+                        if (tophits.getHits().totalHits > 1 && tophits.getHits().totalHits < 5) {
+                            mappedLogs.add(b.getSourceAsMap());
+                            ips = ips + ((String) b.getSourceAsMap().get("Origen")) + "\n";
+                            usr = (String) bucket.getKey();
+                            number = (int) tophits.getHits().totalHits;
+                            logs = logs + b.getSourceAsMap().get("message") + "\n";
+                        }
                     }
                 }
             }
-        }
 
-        if (!ips.equals("")) {
-            setChanged();
-            notifyObservers(new AlertObject(
-                    "Strange login alert",
-                    "The user " + usr + " logged in from " + number + " different IPs in a short ammount of time\n" +
-                                "IPs:\n" +
-                                ips,
-                    logs,
-                    1,
-                    mappedLogs
-                    )
-            );
+            if (!ips.equals("")) {
+                setChanged();
+                notifyObservers(new AlertObject(
+                                "Strange login alert",
+                                "The user " + usr + " logged in from " + number + " different IPs in a short ammount of time\n" +
+                                        "IPs:\n" +
+                                        ips,
+                                logs,
+                                1,
+                                mappedLogs
+                        )
+                );
+            }
         }
         client.close();
 
@@ -227,41 +229,41 @@ public class AlertQuery extends Observable implements Runnable{
 
         SearchResponse r = sr.execute().actionGet();
 
+        if(r.getAggregations()!= null) {
+            Terms agg = r.getAggregations().get("by_srcIP");
+            Collection<Terms.Bucket> buckets = (Collection<Terms.Bucket>) agg.getBuckets();
 
-        Terms agg = r.getAggregations().get("by_srcIP");
-        Collection<Terms.Bucket> buckets = (Collection<Terms.Bucket>) agg.getBuckets();
+            String srcIP = "";
+            String logs = "";
+            ArrayList<Map<String, Object>> mappedLogs = new ArrayList<>();
+            for (Terms.Bucket bucket : buckets) {
+                srcIP = bucket.getKeyAsString();
+                if (bucket.getDocCount() != 0) {
+                    Terms terms = bucket.getAggregations().get("by_dstIP");
+                    Collection<Terms.Bucket> bkts = (Collection<Terms.Bucket>) terms.getBuckets();
 
-        String srcIP = "";
-        String logs = "";
-        ArrayList<Map<String,Object>> mappedLogs = new ArrayList<>();
-        for (Terms.Bucket bucket : buckets) {
-            srcIP = bucket.getKeyAsString();
-            if (bucket.getDocCount() != 0) {
-                Terms terms = bucket.getAggregations().get("by_dstIP");
-                Collection<Terms.Bucket> bkts = (Collection<Terms.Bucket>) terms.getBuckets();
+                    for (Terms.Bucket b : bkts) {
+                        Cardinality c = b.getAggregations().get("unique_port_count");
+                        if (c.getValue() > 15) {
+                            TopHits tophits = b.getAggregations().get("source_document");
 
-                for (Terms.Bucket b : bkts) {
-                    Cardinality c = b.getAggregations().get("unique_port_count");
-                    if (c.getValue() > 15){
-                        TopHits tophits = b.getAggregations().get("source_document");
-
-                        for (SearchHit sh : tophits.getHits()) {
-                            mappedLogs.add(sh.getSourceAsMap());
-                            logs = logs + sh.getSourceAsMap().get("message")+"\n";
+                            for (SearchHit sh : tophits.getHits()) {
+                                mappedLogs.add(sh.getSourceAsMap());
+                                logs = logs + sh.getSourceAsMap().get("message") + "\n";
+                            }
+                            setChanged();
+                            notifyObservers(new AlertObject("Port Scanning from " + srcIP,
+                                            "The IP " + srcIP + " has tried to connect to " + c.getValue() + " ports, could potentially be a port scanning",
+                                            logs,
+                                            2,
+                                            mappedLogs
+                                    )
+                            );
                         }
-                        setChanged();
-                        notifyObservers(new AlertObject("Port Scanning from "+srcIP,
-                                "The IP "+srcIP+" has tried to connect to "+ c.getValue() + " ports, could potentially be a port scanning",
-                                logs,
-                                2,
-                                mappedLogs
-                                )
-                        );
                     }
                 }
             }
         }
-
         client.close();
     }
 
@@ -373,33 +375,34 @@ public class AlertQuery extends Observable implements Runnable{
 
         SearchResponse r = sr.execute().actionGet();
 
+        if(r.getAggregations()!= null) {
+            Terms agg = r.getAggregations().get("by_srcIP");
+            Collection<Terms.Bucket> buckets = (Collection<Terms.Bucket>) agg.getBuckets();
 
-        Terms agg = r.getAggregations().get("by_srcIP");
-        Collection<Terms.Bucket> buckets = (Collection<Terms.Bucket>) agg.getBuckets();
+            String srcIP = "";
+            String logs = "";
+            ArrayList<Map<String, Object>> mappedLogs = new ArrayList<>();
+            for (Terms.Bucket bucket : buckets) {
+                srcIP = bucket.getKeyAsString();
+                if (bucket.getDocCount() != 0) {
+                    int c = (int) bucket.getDocCount();
+                    if (c > 20) {
+                        TopHits tophits = bucket.getAggregations().get("source_document");
 
-        String srcIP = "";
-        String logs = "";
-        ArrayList<Map<String,Object>> mappedLogs = new ArrayList<>();
-        for (Terms.Bucket bucket : buckets) {
-            srcIP = bucket.getKeyAsString();
-            if (bucket.getDocCount() != 0) {
-                int c = (int) bucket.getDocCount();
-                if (c > 20) {
-                    TopHits tophits = bucket.getAggregations().get("source_document");
-
-                    for (SearchHit sh : tophits.getHits()) {
-                        mappedLogs.add(sh.getSourceAsMap());
-                        srcIP = (String) sh.getSourceAsMap().get("Origen");
-                        logs = logs + sh.getSourceAsMap().get("message") + "\n";
+                        for (SearchHit sh : tophits.getHits()) {
+                            mappedLogs.add(sh.getSourceAsMap());
+                            srcIP = (String) sh.getSourceAsMap().get("Origen");
+                            logs = logs + sh.getSourceAsMap().get("message") + "\n";
+                        }
+                        setChanged();
+                        notifyObservers(new AlertObject("Brute force attack from " + srcIP,
+                                        "The IP " + srcIP + " has tfailed to login " + c + " times, a brute force attack could be in process",
+                                        logs,
+                                        2,
+                                        mappedLogs
+                                )
+                        );
                     }
-                    setChanged();
-                    notifyObservers(new AlertObject("Brute force attack from " + srcIP,
-                                    "The IP " + srcIP + " has tfailed to login " + c + " times, a brute force attack could be in process",
-                                    logs,
-                                    2,
-                                    mappedLogs
-                            )
-                    );
                 }
             }
         }
@@ -486,33 +489,37 @@ public class AlertQuery extends Observable implements Runnable{
          */
 
         SearchResponse r = sr.execute().actionGet();
-        Terms agg = r.getAggregations().get("by_srcIP");
-        Collection<Terms.Bucket> buckets = (Collection<Terms.Bucket>) agg.getBuckets();
-        String logs = "";
-        ArrayList<Map<String,Object>> mappedLogs = new ArrayList<>();
-        for (Terms.Bucket bucket : buckets) {
 
-            if (bucket.getDocCount() != 0) {
-                TopHits tophits = bucket.getAggregations().get("source_document");
-                if (bucket.getDocCount() > 5) {
-                    for (SearchHit b : tophits.getHits()) {
+        if(r.getAggregations() != null) {
+            Terms agg = r.getAggregations().get("by_srcIP");
+            Collection<Terms.Bucket> buckets = (Collection<Terms.Bucket>) agg.getBuckets();
+            String logs = "";
+            ArrayList<Map<String, Object>> mappedLogs = new ArrayList<>();
+            for (Terms.Bucket bucket : buckets) {
 
-                        mappedLogs.add(b.getSourceAsMap());
-                        logs = logs + b.getSourceAsMap().get("message") + "\n";
+                if (bucket.getDocCount() != 0) {
+                    TopHits tophits = bucket.getAggregations().get("source_document");
+                    if (bucket.getDocCount() > 5) {
+                        for (SearchHit b : tophits.getHits()) {
+
+                            mappedLogs.add(b.getSourceAsMap());
+                            logs = logs + b.getSourceAsMap().get("message") + "\n";
 
 
+                        }
+                        setChanged();
+                        notifyObservers(new AlertObject("Blocked IP: " + bucket.getKeyAsString(),
+                                        "The IP " + bucket.getKeyAsString() + " has been blocked " + bucket.getDocCount() + " times",
+                                        logs,
+                                        1,
+                                        mappedLogs
+                                )
+                        );
                     }
-                    setChanged();
-                    notifyObservers(new AlertObject("Blocked IP: " + bucket.getKeyAsString(),
-                                    "The IP " + bucket.getKeyAsString() + " has been blocked " + bucket.getDocCount() + " times",
-                                    logs,
-                                    1,
-                                    mappedLogs
-                            )
-                    );
                 }
             }
         }
+        client.close();
     }
     @Override
     public void run() {

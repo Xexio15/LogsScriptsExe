@@ -1,4 +1,5 @@
 import GUI.AlertsView;
+import GUI.LogsView;
 import GUI.ScriptsView;
 import GUI.Tab;
 import Utils.Configuration;
@@ -11,7 +12,7 @@ import java.awt.event.WindowEvent;
 public class Main extends JPanel  {
     private JFrame frame = new JFrame();
     private JTabbedPane tabbedPane = new JTabbedPane();
-    private Tab[] tabs = {new ScriptsView(), new AlertsView()};
+    private Tab[] tabs = {new ScriptsView(), new AlertsView(), new LogsView()};
     private Configuration conf = Configuration.getInstance();
 
     public Main() {
