@@ -2,12 +2,13 @@ package Alerts;
 
 import Utils.Utils;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
 
-public class AlertObject {
+public class AlertObject implements Serializable {
     public String message;
     public String fullMessage;
     public int severity;

@@ -10,20 +10,31 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Observable;
+import java.util.Observer;
 
 public class AlertsView implements Tab, Observer {
     private JPanel mainPanel;
     private JList list1;
     private JTextArea alertsText;
+    private JButton clearBtn;
     private String name = "Alerts";
     private DefaultListModel<AlertObject> model;
 
     public AlertsView(){
         new AlertChecker(this).start();
-        model = new DefaultListModel();
+
+        model = (DefaultListModel<AlertObject>) Utils.loadSerializable("alerts.lst");
+        if (model == null){
+            model = new DefaultListModel();
+        }
+
         list1.setModel(model);
         list1.setCellRenderer(new SeverityRenderer());
         list1.addMouseListener(new MouseAdapter() {
@@ -73,6 +84,13 @@ public class AlertsView implements Tab, Observer {
                 }
             }
         });
+
+        clearBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                model.clear();
+            }
+        });
     }
 
     @Override
@@ -82,7 +100,7 @@ public class AlertsView implements Tab, Observer {
 
     @Override
     public void close() {
-
+        Utils.saveSerializable(model, "alerts.lst");
     }
 
     @Override

@@ -1,8 +1,7 @@
 package Utils;
 
 import javax.swing.*;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.*;
 import java.util.Arrays;
@@ -174,6 +173,36 @@ public final class Utils {
         }
         if (!Files.exists(Paths.get("/generated_logs"))){
             new File("./generated_logs").mkdirs();
+        }
+    }
+
+    public static Object loadSerializable(String file){
+        if (Files.exists(Paths.get(file))){
+            try {
+                ObjectInputStream instream = new ObjectInputStream(new FileInputStream(file));
+                Object obj = instream.readObject();
+                instream.close();
+                return obj;
+            } catch (FileNotFoundException e) {
+                return null;
+            } catch (IOException e) {
+                return null;
+            } catch (ClassNotFoundException e) {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    public static void saveSerializable(Object obj, String file){
+        ObjectOutputStream outstream = null;
+        try {
+            outstream = new ObjectOutputStream(new FileOutputStream(file));
+            outstream.writeObject(obj);
+            outstream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }
