@@ -56,7 +56,13 @@ public class AlertsView implements Tab, Observer {
                         }
                         rows[j] = row;
                     }
-                    TableModel model = new DefaultTableModel(rows, fields.toArray());
+                    TableModel model = new DefaultTableModel(rows, fields.toArray()) {
+                        @Override
+                        public boolean isCellEditable(int row, int column) {
+                            return false;
+                        }
+                    };
+
                     JTable table = new JTable(model);
                     JPanel pan=new JPanel();
                     pan.setLayout(new BorderLayout());
@@ -64,9 +70,8 @@ public class AlertsView implements Tab, Observer {
                     Dialog jd=new JDialog();
                     pan.add(new JScrollPane(table));
                     jd.add(pan);
-                    jd.setSize(new Dimension(200,100));
-                    jd.show();
-                    //JOptionPane.showMessageDialog(pan, a.fullMessage);
+                    jd.pack();
+                    jd.setVisible(true);
                 }
             }
         });
