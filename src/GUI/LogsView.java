@@ -42,7 +42,7 @@ public class LogsView implements Tab, Observer {
 
     @Override
     public void update(Observable observable, Object o) {
-        ArrayList<Map<String,Object>> map = (ArrayList<Map<String,Object>>) o;;
+        ArrayList<Map<String,Object>> map = (ArrayList<Map<String,Object>>) o;
         if(map.size() > 0) {
             for (String key : map.get(0).keySet()) {
                 if (model.findColumn(key) == -1) {

@@ -18,20 +18,20 @@ import java.util.concurrent.TimeUnit;
 
 public class Logger extends Observable implements Runnable{
     private int time = 5;
-    ArrayList<Map<String,Object>> mappedLogs = new ArrayList<>();
+
     public Logger (LogsView v){
         this.addObserver(v);
 
     }
 
-    public void getLogs() throws UnknownHostException {
+    public ArrayList<Map<String, Object>> getLogs() throws UnknownHostException {
+        ArrayList<Map<String,Object>> mappedLogs = new ArrayList<>();
         TransportClient client = new PreBuiltTransportClient(Settings.EMPTY).addTransportAddress(new TransportAddress(InetAddress.getByName("localhost"), 9300));
 
         SearchRequestBuilder sr = client.prepareSearch().setSize(1000).setQuery(QueryBuilders.boolQuery()
                 .must(QueryBuilders.rangeQuery("@timestamp").gte("now-"+time+"s").includeUpper(false))); //From 15s before;
 
         SearchResponse r = sr.execute().actionGet();
-        System.out.println(r.toString());
         for (SearchHit h : r.getHits()){
             Map<String, Object> hmap = h.getSourceAsMap();
             for(Iterator<String> iterator = hmap.keySet().iterator(); iterator.hasNext(); ) {
@@ -44,18 +44,20 @@ public class Logger extends Observable implements Runnable{
             hmap.put("index", h.getIndex());
             mappedLogs.add(hmap);
         }
+        return mappedLogs;
     }
 
     @Override
     public void run() {
         while(true) {
             try {
-                getLogs();
+                ArrayList<Map<String, Object>> logs = getLogs();
+                setChanged();
+                notifyObservers(logs);
             } catch (UnknownHostException e) {
                 e.printStackTrace();
             }
-            setChanged();
-            notifyObservers(mappedLogs);
+
             try {
                 TimeUnit.SECONDS.sleep(5);
             } catch (InterruptedException e) {
