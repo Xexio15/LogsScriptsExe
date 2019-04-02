@@ -1,5 +1,5 @@
 <component name="libraryTable">
-  <library name="commons-codec-1.10">
+  <library name="dependencies">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/dependency/commons-codec-1.10.jar!/" />
       <root url="jar://$PROJECT_DIR$/dependency/commons-logging-1.1.3.jar!/" />
