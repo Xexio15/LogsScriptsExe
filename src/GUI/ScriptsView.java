@@ -7,7 +7,7 @@ import java.awt.event.*;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class ScriptsView implements Tab{
+public class ScriptsView implements Tab {
     private JPanel mainPanel, logsPanel, alertsPanel;
     private JButton startLoggingButton, stopLoggingButton, demoButton, triggerAlertsButton;
     private JTextArea textArea1;

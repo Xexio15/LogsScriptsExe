@@ -7,7 +7,6 @@ import Utils.Utils;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -26,6 +25,7 @@ public class AlertsView implements Tab, Observer {
     private JButton clearBtn;
     private String name = "Alerts";
     private DefaultListModel<AlertObject> model;
+    private int newAlerts = 0;
 
     public AlertsView(){
         new AlertChecker(this).start();
@@ -45,31 +45,51 @@ public class AlertsView implements Tab, Observer {
                     ArrayList<String> fields = new ArrayList();
                     ArrayList<Map<String,Object>> map = a.getMap();
                     String [][] rows = new String [map.size()][];
+                    String [] messages = a.logsMessages;
+
                     for (String key : map.get(0).keySet()){
                         fields.add(key);
                     }
+
                     for (int j = 0; j < map.size(); j++){
                         Map<String,Object> m = map.get(j);
                         String[] row = new String[m.size()];
                         for (int i = 0; i < fields.size(); i++){
-                            row[i] = (m.get(fields.get(i)).toString());
+                           row[i] = (m.get(fields.get(i)).toString());
                         }
                         rows[j] = row;
                     }
-                    TableModel model = new DefaultTableModel(rows, fields.toArray()) {
-                        @Override
-                        public boolean isCellEditable(int row, int column) {
-                            return false;
-                        }
-                    };
+
+                    TableModel model = new LogsTableModel(rows, fields.toArray(), messages);
 
                     JTable table = new JTable(model);
+                    table.removeColumn(table.getColumn("m"));
+                    table.setAutoCreateRowSorter(true);
+                    JTextArea m = new JTextArea();
+                    table.getSelectionModel().addListSelectionListener(new ListSelectionListener(){
+                        public void valueChanged(ListSelectionEvent event) {
+                            int log = table.convertRowIndexToModel(table.getSelectedRow());
+                            m.setText("");
+                            m.setText(((LogsTableModel)table.getModel()).getRowMessage(log));
+                        }
+                    });
                     JPanel pan=new JPanel();
+                    JPanel mpan=new JPanel();
+                    JSplitPane js = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
                     pan.setLayout(new BorderLayout());
-                    pan.add(table);
-                    Dialog jd=new JDialog();
+                    mpan.setLayout(new BorderLayout());
+
+                    mpan.add(new JScrollPane(m));
+                    m.setEditable(false);
                     pan.add(new JScrollPane(table));
-                    jd.add(pan);
+
+                    js.add(pan);
+                    js.add(mpan);
+                    js.setDividerLocation(0.3);
+                    js.setDividerSize(5);
+
+                    Dialog jd = new JDialog();
+                    jd.add(js);
                     jd.pack();
                     jd.setVisible(true);
                 }
@@ -116,7 +136,15 @@ public class AlertsView implements Tab, Observer {
     @Override
     public void update(Observable observable, Object o) {
         AlertObject alert = (AlertObject) o;
-        model.addElement(alert);
+        model.insertElementAt(alert,0);
+        if(((JTabbedPane)mainPanel.getParent()).getSelectedIndex() != 1) {
+            newAlerts++;
+            ((JTabbedPane) mainPanel.getParent()).setTitleAt(1, this.name + " (" + newAlerts + ")");
+        }
+    }
+
+    public void resetCount(){
+        this.newAlerts = 0;
     }
 
     private static class SeverityRenderer extends DefaultListCellRenderer {

@@ -6,6 +6,8 @@ import Utils.Configuration;
 import Utils.Utils;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -23,7 +25,17 @@ public class Main extends JPanel  {
         for (Tab t : tabs) {
             tabbedPane.add(t.getName(), t.getPanel());
         }
+        tabbedPane.addChangeListener(new ChangeListener() { //add the Listener
 
+            public void stateChanged(ChangeEvent e) {
+
+                if(tabbedPane.getSelectedIndex() == 1) //Index starts at 0, so Index 2 = Tab3
+                {
+                    tabbedPane.setTitleAt(1,"Alerts");
+                    ((AlertsView)tabs[1]).resetCount();
+                }
+            }
+        });
         //Add tab panel to the main panel
         frame.getContentPane().add(tabbedPane);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

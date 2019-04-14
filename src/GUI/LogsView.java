@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 
-public class LogsView implements Tab, Observer {
+public class LogsView  implements Tab, Observer {
     private JPanel panel1;
     private JTable logs;
     private String name = "Logs";
@@ -61,11 +61,7 @@ public class LogsView implements Tab, Observer {
                     }
 
                 }
-                if(model.getRowCount() == 0){
-                    model.addRow(row);
-                }else {
-                    model.insertRow(0, row);
-                }
+                model.insertRow(0, row);
             }
         }
         logs.updateUI();

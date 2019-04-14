@@ -14,7 +14,7 @@ public class AlertObject implements Serializable {
     public int severity;
     public String logs = "";
     public ArrayList<Map<String,Object>> mappedLogs;
-
+    public String[] logsMessages;
 
     public AlertObject(String message, String fullMessage, String logs, int severity){
         this.message = message;
@@ -29,6 +29,13 @@ public class AlertObject implements Serializable {
         this.severity = severity;
         this.logs = logs;
         this.mappedLogs = mappedLogs;
+        this.logsMessages = new String[mappedLogs.size()];
+        int i = 0;
+        for(Map<String, Object> m : this.mappedLogs){
+            this.logsMessages[i] = ((String) m.get("message"));
+            m.remove("message");
+            i++;
+        }
 
     }
 
