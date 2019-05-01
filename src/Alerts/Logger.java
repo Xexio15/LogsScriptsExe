@@ -14,13 +14,13 @@ import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 public class Logger extends Observable implements Runnable{
-    private int time = 5;
-
-    public Logger (LogsView v){
+    private int time;
+    private boolean stop = false;
+    public Logger (LogsView v, int time ){
         this.addObserver(v);
+        this.time = time;
 
     }
 
@@ -49,20 +49,29 @@ public class Logger extends Observable implements Runnable{
 
     @Override
     public void run() {
-        while(true) {
-            try {
-                ArrayList<Map<String, Object>> logs = getLogs();
-                setChanged();
-                notifyObservers(logs);
-            } catch (UnknownHostException e) {
-                e.printStackTrace();
-            }
 
-            try {
-                TimeUnit.SECONDS.sleep(5);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+        Timer timer = new Timer();
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                try {
+                    ArrayList<Map<String, Object>> logs = getLogs();
+                    setChanged();
+                    notifyObservers(logs);
+                } catch (UnknownHostException e) {
+                    e.printStackTrace();
+                }
+                if(stop){
+                    timer.cancel();
+                    timer.purge();
+                }
             }
-        }
+        };
+        if(!stop)  timer.scheduleAtFixedRate(task,0,time*1000);
+
+    }
+
+    public void stopTask(){
+        this.stop = true;
     }
 }

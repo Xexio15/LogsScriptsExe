@@ -56,6 +56,8 @@
       <root url="jar://$PROJECT_DIR$/dependency/t-digest-3.2.jar!/" />
       <root url="jar://$PROJECT_DIR$/dependency/transport-6.4.3.jar!/" />
       <root url="jar://$PROJECT_DIR$/dependency/transport-netty4-client-6.4.3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/dependency/xchart-3.5.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/dependency/itextpdf-5.5.13.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

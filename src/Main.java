@@ -1,7 +1,4 @@
-import GUI.AlertsView;
-import GUI.LogsView;
-import GUI.ScriptsView;
-import GUI.Tab;
+import GUI.*;
 import Utils.Configuration;
 import Utils.Utils;
 
@@ -14,10 +11,17 @@ import java.awt.event.WindowEvent;
 public class Main extends JPanel  {
     private JFrame frame = new JFrame();
     private JTabbedPane tabbedPane = new JTabbedPane();
-    private Tab[] tabs = {new ScriptsView(), new AlertsView(), new LogsView()};
+    private Tab[] tabs;
     private Configuration conf = Configuration.getInstance();
 
     public Main() {
+        tabs = new Tab[4];
+        tabs[0] = new ScriptsView();
+        ChartsView c = new ChartsView();
+        tabs[1] = new AlertsView(c);
+        tabs[2] = new LogsView();
+        tabs[3] = c;
+
         //Load Configutarion File
         Utils.loadConfFile();
 
@@ -52,7 +56,17 @@ public class Main extends JPanel  {
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         } catch (UnsupportedLookAndFeelException e) {
-            e.printStackTrace();
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (ClassNotFoundException e1) {
+                e1.printStackTrace();
+            } catch (InstantiationException e1) {
+                e1.printStackTrace();
+            } catch (IllegalAccessException e1) {
+                e1.printStackTrace();
+            } catch (UnsupportedLookAndFeelException e1) {
+                e1.printStackTrace();
+            }
         }
 
 

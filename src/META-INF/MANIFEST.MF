@@ -32,6 +32,7 @@ Class-Path: ./dependencies/commons-codec-1.10.jar ./dependencies/commo
  ncies/rank-eval-client-6.4.3.jar ./dependencies/reindex-client-6.4.3.
  jar ./dependencies/snakeyaml-1.17.jar ./dependencies/t-digest-3.2.jar
   ./dependencies/transport-6.4.3.jar ./dependencies/transport-netty4-c
- lient-6.4.3.jar
+ lient-6.4.3.jar ./dependencies/xchart-3.5.4.jar ./dependencies/itextp
+ df-5.5.13.jar
 Main-Class: Main
 
